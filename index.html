@@ -1,0 +1,572 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>심층 색채 심리 진단 & 기록</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+        }
+
+        body {
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            color: #333;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            background: #ffffff;
+            width: 100%;
+            max-width: 900px;
+            border-radius: 24px;
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.1);
+            padding: 45px 35px;
+            text-align: center;
+        }
+
+        .screen {
+            display: none;
+        }
+
+        .screen.active {
+            display: block;
+        }
+
+        /* 시작 화면 */
+        .intro-screen h1 {
+            font-size: 2.2rem;
+            margin-bottom: 20px;
+            color: #2c3e50;
+        }
+
+        .intro-screen p {
+            font-size: 1.05rem;
+            color: #555;
+            line-height: 1.7;
+            margin-bottom: 35px;
+        }
+
+        /* 질문 화면 */
+        .progress-bar {
+            width: 100%;
+            height: 10px;
+            background-color: #f1f2f6;
+            border-radius: 5px;
+            margin-bottom: 25px;
+            overflow: hidden;
+        }
+
+        .progress {
+            height: 100%;
+            width: 0%;
+            background: linear-gradient(90deg, #6c5ce7, #a29bfe);
+            transition: width 0.3s ease;
+        }
+
+        .question-title {
+            font-size: 1.3rem;
+            margin-bottom: 25px;
+            color: #2d3436;
+            word-break: keep-all;
+            line-height: 1.5;
+            font-weight: 700;
+        }
+
+        .color-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 12px;
+            margin-bottom: 25px;
+        }
+
+        @media (min-width: 500px) {
+            .color-grid {
+                grid-template-columns: repeat(3, 1fr);
+            }
+        }
+
+        @media (min-width: 750px) {
+            .color-grid {
+                grid-template-columns: repeat(4, 1fr);
+            }
+        }
+
+        .color-btn {
+            border: none;
+            border-radius: 12px;
+            padding: 16px 10px;
+            font-size: 0.9rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.08);
+            word-break: keep-all;
+        }
+
+        .color-btn:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 8px 16px rgba(0, 0, 0, 0.15);
+        }
+
+        /* 결과 화면 */
+        .result-badge {
+            display: inline-block;
+            padding: 8px 18px;
+            border-radius: 20px;
+            font-weight: bold;
+            font-size: 0.95rem;
+            margin-bottom: 15px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.08);
+        }
+
+        .result-title {
+            font-size: 1.6rem;
+            margin-bottom: 25px;
+            color: #2c3e50;
+            line-height: 1.4;
+        }
+
+        .result-box {
+            background-color: #f8f9fa;
+            border-left: 5px solid #6c5ce7;
+            border-radius: 0 12px 12px 0;
+            padding: 20px;
+            text-align: left;
+            margin-bottom: 25px;
+            line-height: 1.7;
+            color: #333;
+        }
+
+        .result-box h3 {
+            font-size: 1.05rem;
+            margin-bottom: 8px;
+            color: #2f3542;
+        }
+
+        .result-box p {
+            font-size: 0.95rem;
+            color: #57606f;
+            margin-bottom: 18px;
+        }
+
+        .result-box p:last-child {
+            margin-bottom: 0;
+        }
+
+        .combo-box {
+            display: flex;
+            gap: 15px;
+            margin-top: 10px;
+            flex-wrap: wrap;
+        }
+
+        .combo-item {
+            flex: 1;
+            min-width: 200px;
+            padding: 12px 15px;
+            border-radius: 10px;
+            font-weight: 600;
+            font-size: 0.9rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+
+        .all-types-section {
+            margin-top: 35px;
+            padding-top: 25px;
+            border-top: 2px dashed #eee;
+            text-align: left;
+        }
+
+        .all-types-section h3 {
+            font-size: 1.2rem;
+            color: #2c3e50;
+            margin-bottom: 15px;
+            text-align: center;
+        }
+
+        .type-list {
+            display: grid;
+            grid-template-columns: repeat(1, 1fr);
+            gap: 12px;
+            max-height: 300px;
+            overflow-y: auto;
+            padding-right: 5px;
+        }
+
+        @media (min-width: 600px) {
+            .type-list {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+
+        .type-card {
+            background: #f1f2f6;
+            padding: 12px 15px;
+            border-radius: 10px;
+            font-size: 0.88rem;
+            line-height: 1.5;
+            color: #333;
+        }
+
+        .type-card-title {
+            font-weight: bold;
+            margin-bottom: 4px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .history-section {
+            margin-top: 30px;
+            padding-top: 20px;
+            border-top: 1px solid #eee;
+            text-align: left;
+        }
+
+        .history-section h4 {
+            font-size: 1.05rem;
+            color: #2c3e50;
+            margin-bottom: 10px;
+        }
+
+        .history-list {
+            list-style: none;
+            max-height: 180px;
+            overflow-y: auto;
+        }
+
+        .history-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 8px 12px;
+            background: #f8f9fa;
+            border-radius: 8px;
+            margin-bottom: 6px;
+            font-size: 0.88rem;
+            color: #333;
+        }
+
+        .btn-group {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+            flex-wrap: wrap;
+            margin-top: 20px;
+        }
+
+        .btn-primary {
+            background: #6c5ce7;
+            color: #fff;
+            border: none;
+            padding: 14px 28px;
+            font-size: 0.98rem;
+            font-weight: bold;
+            border-radius: 30px;
+            cursor: pointer;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+        }
+
+        .btn-secondary {
+            background: #00b894;
+            color: #fff;
+            border: none;
+            padding: 14px 28px;
+            font-size: 0.98rem;
+            font-weight: bold;
+            border-radius: 30px;
+            cursor: pointer;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+        }
+
+        .btn-primary:hover, .btn-secondary:hover {
+            opacity: 0.9;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <!-- 1. 시작 화면 -->
+    <div id="intro-screen" class="screen active intro-screen">
+        <h1>🎨 확장형 24색 심층 색채 심리 진단</h1>
+        <p>24가지의 다채로운 색상 속에서 현재 나의 무의식적 마음 상태를 진단해 보세요.<br>결과 화면에서 상세한 심리 분석과 추천 솔루션을 확인할 수 있습니다.</p>
+        <button class="btn-primary" onclick="startQuiz()">검사 시작하기</button>
+    </div>
+
+    <!-- 2. 질문 화면 -->
+    <div id="quiz-screen" class="screen">
+        <div class="progress-bar">
+            <div id="progress" class="progress"></div>
+        </div>
+        <h2 id="question-title" class="question-title">질문 내용</h2>
+        <div id="color-grid" class="color-grid"></div>
+    </div>
+
+    <!-- 3. 결과 화면 -->
+    <div id="result-screen" class="screen">
+        <span id="result-badge" class="result-badge">현재 나의 심리 상태</span>
+        <h2 id="result-title" class="result-title">결과 타이틀</h2>
+        
+        <div class="result-box">
+            <h3>🔍 현재 심리 및 에너지 분석</h3>
+            <p id="result-positive">분석 내용</p>
+            
+            <h3>⚠️ 주의할 점 & 내면의 숨은 욕구</h3>
+            <p id="result-negative">주의 내용</p>
+
+            <h3>💡 추천 솔루션</h3>
+            <p id="result-solution">솔루션 내용</p>
+
+            <h3 style="margin-top: 15px;">🎨 추천 색상 궁합</h3>
+            <div class="combo-box">
+                <div id="good-combo" class="combo-item">잘 맞는 색상</div>
+                <div id="bad-combo" class="combo-item">주의할 색상</div>
+            </div>
+        </div>
+
+        <div class="btn-group">
+            <button class="btn-primary" onclick="startQuiz()">다시 테스트하기</button>
+            <button class="btn-secondary" onclick="saveRecord()">테스트 결과 기록해두기 📝</button>
+        </div>
+
+        <div class="history-section">
+            <h4>📊 나의 심리 상태 변화 기록</h4>
+            <ul id="history-list" class="history-list">
+                <li style="color: #666; font-size: 0.85rem;">아직 저장된 검사 기록이 없습니다.</li>
+            </ul>
+        </div>
+
+        <div class="all-types-section">
+            <h3>📖 전체 24가지 색채 심리 유형 보기</h3>
+            <div id="all-types-grid" class="type-list"></div>
+        </div>
+    </div>
+</div>
+
+<script>
+    // 24가지 색상 전체 정의
+    const results = {
+        red: { name: "빨강색", hex: "#ff4757", text: "#fff", positive: "넘치는 열정과 행동력, 강한 생명력을 상징합니다.", negative: "조급함이나 스트레스, 분노가 누적되어 있을 수 있습니다.", solution: "심호흡을 하고 속도를 잠시 줄여보세요.", goodCombo: "초록색 & 파란색", badCombo: "노란색" },
+        green: { name: "초록색", hex: "#2ed573", text: "#2f3542", positive: "평화와 치유, 균형 잡힌 심리 상태를 나타냅니다.", negative: "지친 일상에서 도망치고 싶을 수 있습니다.", solution: "자연을 가까이하며 온전한 휴식을 취하세요.", goodCombo: "빨강색 & 갈색", badCombo: "주황색" },
+        blue: { name: "파란색", hex: "#1e90ff", text: "#fff", positive: "이성적이고 차분하며 깊은 신뢰감을 주는 상태입니다.", negative: "감정을 억누르고 있거나 외로움을 느낄 수 있습니다.", solution: "마음을 터놓을 대상을 찾아보세요.", goodCombo: "하얀색 & 회색", badCombo: "분홍색" },
+        yellow: { name: "노란색", hex: "#ffa502", text: "#2f3542", positive: "밝은 희망과 지적 호기심, 유쾌한 소통 욕구가 가득합니다.", negative: "불안감이나 초조함으로 주목받고 싶어 할 수 있습니다.", solution: "가벼운 산책과 유머로 긴장을 풀어요.", goodCombo: "보라색 & 파란색", badCombo: "빨강색" },
+        purple: { name: "보라색", hex: "#9b59b6", text: "#fff", positive: "섬세한 감수성과 예술적 직관력이 최고조에 달해 있습니다.", negative: "현실과 이상 사이에서 혼란을 겪을 수 있습니다.", solution: "감정을 일기로 기록해 마음을 정돈해 보세요.", goodCombo: "노란색 & 연보라색", badCombo: "초록색" },
+        orange: { name: "주황색", hex: "#ff7f50", text: "#fff", positive: "활기찬 사교성과 즐거움, 긍정적인 에너지가 넘칩니다.", negative: "외로움을 잊기 위해 과도한 자극을 찾을 수 있습니다.", solution: "편안한 사람들과 소소한 수다를 즐겨보세요.", goodCombo: "청록색 & 남색", badCombo: "초록색" },
+        black: { name: "검정색", hex: "#2f3542", text: "#fff", positive: "강한 절제력과 주관으로 자신을 보호하고 있습니다.", negative: "소통을 닫고 방어적으로 숨고 싶어 할 수 있습니다.", solution: "적막 속에서 오롯이 혼자만의 휴식을 취하세요.", goodCombo: "하얀색 & 진분홍색", badCombo: "베이지색" },
+        pink: { name: "분홍색", hex: "#ff6b81", text: "#fff", positive: "따뜻한 사랑과 위로, 보살핌을 나누고 싶은 감성적 상태입니다.", negative: "마음이 약해져 보호를 갈구할 수 있습니다.", solution: "포근한 이불 속에서 스스로를 토닥여주세요.", goodCombo: "회색 & 베이지색", badCombo: "파란색" },
+        grey: { name: "회색", hex: "#a4b0be", text: "#2f3542", positive: "감정을 절제하고 객관적으로 상황을 관망하고 있습니다.", negative: "지나친 무기력함이나 은폐 욕구를 느낄 수 있습니다.", solution: "좋아하는 음악을 들으며 활력을 충전해 보세요.", goodCombo: "분홍색 & 파란색", badCombo: "금색" },
+        white: { name: "하얀색", hex: "#f1f2f6", text: "#2f3542", positive: "과거를 비우고 새롭게 시작하려는 정화와 순수의 상태입니다.", negative: "완벽주의 강박으로 공허함을 느낄 수 있습니다.", solution: "지금 이대로도 충분하다고 스스로를 칭찬해주세요.", goodCombo: "검정색 & 파란색", badCombo: "없음" },
+        brown: { name: "갈색", hex: "#a0522d", text: "#fff", positive: "현실적이고 뿌리 깊은 안정감과 편안함을 추구합니다.", negative: "변화를 두려워하며 답답함을 느낄 수 있습니다.", solution: "작은 일탈이나 새로운 시도를 가볍게 해보세요.", goodCombo: "초록색 & 아이보리", badCombo: "연보라색" },
+        navy: { name: "남색", hex: "#2c3e50", text: "#fff", positive: "깊은 통찰력과 엄격한 책임감, 진중함을 지니고 있습니다.", negative: "지나친 책임감에 짓눌려 숨이 막힐 수 있습니다.", solution: "모든 의무를 내려놓고 반신욕을 즐겨보세요.", goodCombo: "주황색 & 은색", badCombo: "밝은 회색" },
+        maroon: { name: "적갈색", hex: "#800000", text: "#fff", positive: "깊고 무르익은 열정과 내면의 묵직한 카리스마가 있습니다.", negative: "오래된 감정이나 피로가 깊게 침전되어 있을 수 있습니다.", solution: "따뜻한 차를 마시며 생각을 비워내세요.", goodCombo: "금색 & 민트", badCombo: "연노란색" },
+        lightGreen: { name: "연두색", hex: "#7bed9f", text: "#2f3542", positive: "새싹처럼 싱그러운 성장에 대한 기대와 순수한 생명력입니다.", negative: "아직 경험이 부족해 조급함을 느낄 수 있습니다.", solution: "서두르지 말고 차근차근 단계를 밟아가세요.", goodCombo: "베이지색 & 아이보리", badCombo: "적갈색" },
+        skyBlue: { name: "하늘색", hex: "#70a1ff", text: "#2f3542", positive: "맑고 투명한 해방감과 자유로운 영감을 갈구합니다.", negative: "깊은 대화를 나누지 못해 공허할 수 있습니다.", solution: "탁 트인 하늘을 보며 깊은 숨을 쉬어보세요.", badCombo: "검정색", goodCombo: "민트 & 라벤더" },
+        lightYellow: { name: "연노란색", hex: "#ffeaa7", text: "#2f3542", positive: "부드럽고 가벼운 호기심과 산뜻한 기분 전환을 원합니다.", negative: "집중력이 흐려지고 쉽게 피로해질 수 있습니다.", solution: "달콤한 간식과 함께 휴식을 취하세요.", goodCombo: "연보라색 & 베이지색", badCombo: "적갈색" },
+        lightPurple: { name: "연보라색", hex: "#d8b4fe", text: "#2f3542", positive: "몽환적이고 아름다운 감성, 평화로운 내면 세계입니다.", negative: "현실감각이 떨어지고 상상에만 잠길 수 있습니다.", solution: "가벼운 산책으로 발을 땅에 디뎌보세요.", goodCombo: "연노란색 & 보라색", badCombo: "갈색" },
+        beige: { name: "베이지색", hex: "#f5cd79", text: "#2f3542", positive: "꾸밈없는 편안함과 부드러운 인간관계를 원합니다.", negative: "자기 주장을 펼치지 못하고 양보만 할 수 있습니다.", solution: "내 의견을 솔직하게 표현해 보세요.", goodCombo: "분홍색 & 연두색", badCombo: "검정색" },
+        turquoise: { name: "청록색", hex: "#17c0eb", text: "#fff", positive: "독창적인 소통 능력과 상쾌한 치유의 에너지가 넘칩니다.", negative: "감정 기복이 심해져 종잡을 수 없을 수 있습니다.", solution: "일정한 루틴을 지키며 마음의 중심을 잡으세요.", goodCombo: "주황색 & 금색", badCombo: "진분홍색" },
+        darkPink: { name: "진분홍색", hex: "#e84393", text: "#fff", positive: "화려하고 대담하게 매력을 발산하고 싶은 열정입니다.", negative: "관심을 갈구하며 감정이 과잉될 수 있습니다.", solution: "내면의 고요함에 집중하는 시간을 가져보세요.", goodCombo: "검정색 & 은색", badCombo: "청록색" },
+        gold: { name: "금색", hex: "#e1b12c", text: "#2f3542", positive: "풍요로움과 높은 성취감, 스스로에 대한 강한 자부심입니다.", negative: "물질적이거나 과시적인 것에 집착할 수 있습니다.", solution: "내면의 성취와 감사함에 집중하세요.", goodCombo: "적갈색 & 청록색", badCombo: "회색" },
+        silver: { name: "은색", hex: "#dcdde1", text: "#2f3542", positive: "세련된 지성과 현대적인 감각, 차분한 세련됨입니다.", negative: "차가운 완벽주의로 타인에게 선을 그을 수 있습니다.", solution: "따뜻한 온기를 나누는 대화를 시도해 보세요.", goodCombo: "남색 & 진분홍색", badCombo: "금색" },
+        ivory: { name: "아이보리", hex: "#fffbe6", text: "#2f3542", positive: "고결하고 따스하며 부드러운 순수함을 지니고 있습니다.", negative: "외부 자극에 쉽게 상처받을 수 있습니다.", solution: "나만의 안전한 공간에서 마음을 보호하세요.", goodCombo: "연두색 & 갈색", badCombo: "검정색" },
+        lightGrey: { name: "밝은 회색", hex: "#f5f6fa", text: "#2f3542", positive: "소란스럽지 않은 고요함과 무난한 평화를 원합니다.", negative: "존재감이 흐려지고 방관자가 될 수 있습니다.", solution: "내 목소리를 내어 적극적으로 참여해 보세요.", goodCombo: "하늘색 & 분홍색", badCombo: "남색" }
+    };
+
+    // 8개 질문 (각 질문당 12가지의 다양한 색상 선택지)
+    const questions = [
+        {
+            title: "Q1. 최근 바쁜 일상 속에서 문득 떠나 휴식을 취하고 싶은 안식처의 색감은?",
+            options: ["green", "navy", "lightPurple", "beige", "turquoise", "black", "red", "yellow", "pink", "white", "skyBlue", "grey"]
+        },
+        {
+            title: "Q2. 중요한 계약이나 도전 과제를 앞두고 내 안에서 불태우고 싶은 에너지는?",
+            options: ["red", "yellow", "pink", "skyBlue", "orange", "turquoise", "navy", "lightGreen", "lightPurple", "black", "gold", "maroon"]
+        },
+        {
+            title: "Q3. 사람들과의 대화나 모임에서 은근히 드러내고 싶은 나의 이미지 컬러는?",
+            options: ["darkPink", "beige", "yellow", "lightPurple", "orange", "black", "white", "skyBlue", "red", "turquoise", "silver", "gold"]
+        },
+        {
+            title: "Q4. 주말에 오롯이 혼자 방에 머물 때 끌리는 조명이나 인테리어 컬러는?",
+            options: ["skyBlue", "turquoise", "lightGreen", "white", "lightPurple", "navy", "beige", "black", "orange", "yellow", "lightGrey", "ivory"]
+        },
+        {
+            title: "Q5. 고민거리가 많아 머릿속이 엉켜있을 때 마음을 가라앉혀주는 색은?",
+            options: ["navy", "black", "white", "turquoise", "lightGreen", "skyBlue", "lightPurple", "red", "beige", "darkPink", "grey", "brown"]
+        },
+        {
+            title: "Q6. 최근 마음 상하는 일로 상처받았을 때, 나에게 필요했던 위로의 온도는?",
+            options: ["beige", "lightPurple", "darkPink", "orange", "lightGreen", "white", "skyBlue", "yellow", "turquoise", "navy", "pink", "lightYellow"]
+        },
+        {
+            title: "Q7. 나만의 예술적 자극이나 아이디어를 끌어올리고 싶을 때 끌리는 컬러는?",
+            options: ["yellow", "red", "orange", "darkPink", "purple", "turquoise", "skyBlue", "lightGreen", "navy", "black", "gold", "silver"]
+        },
+        {
+            title: "Q8. 내면의 소리에 집중하며 완전한 평온에 도달하고 싶을 때 마음을 끄는 최후의 선택은?",
+            options: ["green", "white", "black", "navy", "lightPurple", "lightGreen", "skyBlue", "beige", "orange", "red", "brown", "silver"]
+        }
+    ];
+
+    let currentQuestionIndex = 0;
+    const scores = {};
+    let lastResultType = "";
+
+    function switchScreen(screenId) {
+        document.querySelectorAll('.screen').forEach(screen => {
+            screen.classList.remove('active');
+        });
+        document.getElementById(screenId).classList.add('active');
+    }
+
+    function startQuiz() {
+        currentQuestionIndex = 0;
+        for (let key in scores) delete scores[key];
+        switchScreen('quiz-screen');
+        showQuestion();
+    }
+
+    function showQuestion() {
+        const q = questions[currentQuestionIndex];
+        document.getElementById("question-title").innerText = q.title;
+        
+        const progressPercent = (currentQuestionIndex / questions.length) * 100;
+        document.getElementById("progress").style.width = `${progressPercent}%`;
+
+        const grid = document.getElementById("color-grid");
+        grid.innerHTML = "";
+
+        q.options.forEach(colorKey => {
+            const colorData = results[colorKey];
+            if (!colorData) return;
+
+            const btn = document.createElement("button");
+            btn.className = "color-btn";
+            btn.style.backgroundColor = colorData.hex;
+            btn.style.color = colorData.text;
+            btn.innerText = colorData.name;
+            btn.setAttribute("onclick", `selectOption('${colorKey}')`);
+            grid.appendChild(btn);
+        });
+    }
+
+    function selectOption(type) {
+        scores[type] = (scores[type] || 0) + 1;
+        currentQuestionIndex++;
+
+        if (currentQuestionIndex < questions.length) {
+            showQuestion();
+        } else {
+            showResult();
+        }
+    }
+
+    function showResult() {
+        switchScreen('result-screen');
+
+        let topType = Object.keys(scores).reduce((a, b) => scores[a] > scores[b] ? a : b, "red");
+        lastResultType = topType;
+        const res = results[topType];
+
+        const badge = document.getElementById("result-badge");
+        badge.innerText = res.name;
+        badge.style.backgroundColor = res.hex;
+        badge.style.color = res.text;
+
+        document.getElementById("result-title").innerText = `당신의 현재 상태는 '${res.name}' 에너지가 지배적입니다.`;
+        document.getElementById("result-positive").innerText = res.positive;
+        document.getElementById("result-negative").innerText = res.negative;
+        document.getElementById("result-solution").innerText = res.solution;
+
+        document.getElementById("good-combo").innerText = `✨ 시너지 색상: ${res.goodCombo}`;
+        document.getElementById("good-combo").style.backgroundColor = "#e8f8f5";
+        document.getElementById("good-combo").style.color = "#117a65";
+
+        document.getElementById("bad-combo").innerText = `⚠️ 부딪히는 색상: ${res.badCombo}`;
+        document.getElementById("bad-combo").style.backgroundColor = "#fdedec";
+        document.getElementById("bad-combo").style.color = "#78281f";
+
+        renderAllTypes();
+        loadRecords();
+    }
+
+    function renderAllTypes() {
+        const grid = document.getElementById("all-types-grid");
+        grid.innerHTML = "";
+        
+        for (let key in results) {
+            const item = results[key];
+            const div = document.createElement("div");
+            div.className = "type-card";
+            div.innerHTML = `
+                <div class="type-card-title">
+                    <span style="display:inline-block; width:12px; height:12px; border-radius:50%; background-color:${item.hex}; border:1px solid #ccc;"></span>
+                    ${item.name}
+                </div>
+                <div>${item.positive}</div>
+            `;
+            grid.appendChild(div);
+        }
+    }
+
+    function saveRecord() {
+        if (!lastResultType) return;
+
+        const dateStr = new Date().toLocaleDateString('ko-KR', {
+            month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit'
+        });
+        
+        const record = {
+            date: dateStr,
+            typeName: results[lastResultType].name
+        };
+
+        let records = JSON.parse(localStorage.getItem("color_psych_history_v4") || "[]");
+        records.unshift(record);
+        if(records.length > 10) records.pop();
+
+        localStorage.setItem("color_psych_history_v4", JSON.stringify(records));
+        alert("현재 검사 결과가 안전하게 기록되었습니다! 📝");
+        loadRecords();
+    }
+
+    function loadRecords() {
+        const list = document.getElementById("history-list");
+        let records = JSON.parse(localStorage.getItem("color_psych_history_v4") || "[]");
+
+        if (records.length === 0) {
+            list.innerHTML = `<li style="color: #666; font-size: 0.85rem;">아직 저장된 검사 기록이 없습니다.</li>`;
+            return;
+        }
+
+        list.innerHTML = "";
+        records.forEach(r => {
+            const li = document.createElement("li");
+            li.className = "history-item";
+            li.innerHTML = `<span>📅 ${r.date}</span> <strong>진단: ${r.typeName}</strong>`;
+            list.appendChild(li);
+        });
+    }
+
+    // 페이지 로드 시 전체 유형 목록 렌더링
+    document.addEventListener("DOMContentLoaded", () => {
+        renderAllTypes();
+    });
+</script>
+
+</body>
+</html>
